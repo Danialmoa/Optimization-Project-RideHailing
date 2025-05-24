@@ -2,3 +2,5 @@
 .vscode
 .env
 .venv
+*.pyc
+*.egg-info
