@@ -26,7 +26,7 @@ class MapData:
         
     def load_data(self):
         # https://www.kaggle.com/datasets/asjad99/rome-taxi-data-subset
-        driver_data = pd.read_csv('data/taxi_data_subset.csv')
+        driver_data = pd.read_csv('data/databases/taxi_data_subset.csv')
         longitude = driver_data['Longitude']
         latitude = driver_data['Latitude']
         self.points = list(zip(latitude, longitude))
@@ -54,6 +54,6 @@ class MapData:
 if __name__ == "__main__":
     map_data = MapData()
     df = pd.DataFrame(map_data.h3_index_to_district.keys(), columns=['district'])
-    df.to_csv('data/districts.csv', index=False)
-    np.save('data/distance_matrix.npy', map_data.distance_matrix)
+    df.to_csv('data/databases/districts.csv', index=False)
+    np.save('data/databases/distance_matrix.npy', map_data.distance_matrix)
     
