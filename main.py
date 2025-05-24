@@ -172,6 +172,7 @@ class OptimizerModel:
         
         self.model.setParam('LogToConsole', 1) # show log in console
         self.model.setParam('DisplayInterval', 10) # update every 10 seconds
+        self.model.setParam('MIPGap', 0.005) # 0.5% gap
         
         self.model.update()
         self.model.optimize()

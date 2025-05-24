@@ -1,17 +1,13 @@
 
 === DRIVER ITINERARY ===
 Start at location 871e80420ffffff at time 480
-Empty move from 871e80420ffffff to 871e86253ffffff at time 480 (duration: 38.189185148441396, cost: 42.00810366328554)
-Wait at location 871e86253ffffff for 3.81 time units
-Ride from 871e86253ffffff to 871e8050affffff starts at 522.00, ends at 641.77 (revenue: 46.82515276287392)
-Empty move from 871e8050affffff to 871e805a0ffffff at time 641.773324797055 (duration: 20.897297067753172, cost: 22.98702677452849)
-Wait at location 871e805a0ffffff for 40.33 time units
-Ride from 871e805a0ffffff to 871e86258ffffff starts at 703.00, ends at 736.28 (revenue: 13.733818266413063)
-Empty move from 871e86258ffffff to 871e80404ffffff at time 736.2830131439675 (duration: 32.37094051682007, cost: 35.60803456850208)
-Wait at location 871e80404ffffff for 390.35 time units
-Ride from 871e80404ffffff to 871e80428ffffff starts at 1159.00, ends at 1182.13 (revenue: 14.8943739811098)
+Empty move from 871e80420ffffff to 871e80500ffffff at time 480 (duration: 14.768574025686307, cost: 10.338001817980414)
+Wait at location 871e80500ffffff for 112.23 time units
+Ride from 871e80500ffffff to 871e8051bffffff starts at 607.00, ends at 647.33 (revenue: 18.775727585022587)
+Wait at location 871e8051bffffff for 549.37 time units
+Ride from 871e8051bffffff to 871e8625effffff starts at 1196.70, ends at 1285.12 (revenue: 44.089058581713886)
 
 === SUMMARY ===
-Total revenue: 75.45334501039677
-Total empty movement cost: 100.6031650063161
-Net profit: -25.14981999591933
+Total revenue: 62.86478616673647
+Total empty movement cost: 10.338001817980414
+Net profit: 52.52678434875606
