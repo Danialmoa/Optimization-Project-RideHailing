@@ -98,3 +98,4 @@ if __name__ == "__main__":
     map_data = MapData()
     df = pd.DataFrame(map_data.hexagon_weights.items(), columns=['district', 'weight'])
     df.to_csv('data/databases/hexagons.csv', index=False)
+    print(len(map_data.districts))

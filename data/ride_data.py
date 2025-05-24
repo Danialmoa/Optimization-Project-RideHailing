@@ -11,8 +11,8 @@ class RideData:
         self.hexagon_weights = self.data['weight'].tolist()
         self.distance_matrix = np.load('data/databases/distance_matrix.npy')
         self.h3_to_index = {h3_index: i for i, h3_index in enumerate(self.hexagons)}
-        self.start_time = 8 # 8:00 AM
-        self.end_time = 23 # 11:00 PM
+        self.start_time = 8 * 60 # 8:00 AM (converted to minutes)
+        self.end_time = 23 * 60 # 11:00 PM (converted to minutes)
         
         # https://www.archeoroma.org/taxi/rates/
         self.price_per_km_range = (1.1, 1.6) # 1.1 - 1.6 EUR/km
@@ -38,10 +38,10 @@ class RideData:
     
 if __name__ == "__main__":
     ride_data = RideData()
-    rides = [ride_data.generate_rides for _ in range(1000)]
+    rides = [ride_data.generate_rides for _ in range(10)]
     df = pd.DataFrame(
         [ride.to_dict() for ride in rides],
-        columns=['origin', 'destination', 'available_at', 'end_at', 'price', 'duration', 'lat_origin', 'lng_origin', 'lat_destination', 'lng_destination']
+        columns=['origin', 'destination', 'available_at', 'end_at', 'price', 'duration']
     )
     df.to_csv('data/databases/rides.csv', index=False)
     
