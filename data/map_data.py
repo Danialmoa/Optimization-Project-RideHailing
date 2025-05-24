@@ -53,7 +53,7 @@ class MapData:
 
 if __name__ == "__main__":
     map_data = MapData()
-    df = pd.DataFrame(map_data.h3_index_to_district.items(), columns=['h3_index', 'district'])
+    df = pd.DataFrame(map_data.h3_index_to_district.keys(), columns=['district'])
     df.to_csv('data/districts.csv', index=False)
     np.save('data/distance_matrix.npy', map_data.distance_matrix)
     
