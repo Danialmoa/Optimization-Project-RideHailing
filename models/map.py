@@ -28,7 +28,7 @@ class Map:
     
     def get_cost(self, origin, destination):
          # 1.3 is approxiation ratio for air distance to road distance, 0.7 is a factor for the cost of the ride
-        return self.distance_matrix[self.districts.index(origin), self.districts.index(destination)] * 1.3 * 1.1
+        return self.distance_matrix[self.districts.index(origin), self.districts.index(destination)] * 1.3 * 0.7
     
     def get_neighbors(self, hexagon):
         return self.neighbors[hexagon]
