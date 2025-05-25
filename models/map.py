@@ -35,3 +35,15 @@ class Map:
         
     def get_time(self, origin, destination):
         return self.distance_matrix[self.districts.index(origin), self.districts.index(destination)] * 1.3
+    
+    def get_lat(self, hexagon):
+        return h3.cell_to_latlng(hexagon)[1]
+    
+    def get_lng(self, hexagon):
+        return h3.cell_to_latlng(hexagon)[0]
+    
+if __name__ == "__main__":
+    map = Map()
+    
+    print(map.get_lat(map.districts[0]))
+    print(map.get_lng(map.districts[0]))

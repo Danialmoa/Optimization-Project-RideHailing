@@ -165,14 +165,14 @@ class OptimizerModel:
         
         self.model.setObjective(
             gp.quicksum(
-                self.ride_sequence[s, r] * r.price for s in self.rides + ['start'] for r in self.rides if s != r
+                self.ride_sequence[s, r] * (r.price - self.map.get_cost(r.origin, r.destination)) for s in self.rides + ['start'] for r in self.rides if s != r
             ),
             gp.GRB.MAXIMIZE
         )
         
         self.model.setParam('LogToConsole', 1) # show log in console
         self.model.setParam('DisplayInterval', 10) # update every 10 seconds
-        self.model.setParam('MIPGap', 0.003) # 0.3% gap
+        self.model.setParam('MIPGap', 0.005) # 0.5% gap
         
         self.model.update()
         self.model.optimize()
@@ -198,6 +198,8 @@ class OptimizerModel:
         report_text += "\n=== DRIVER ITINERARY ===\n"
         report_text += f"Start at location {current_location} at time {current_time}\n"
         
+        data_frame = pd.DataFrame()
+        
         # Follow the sequence of rides and movements
         while True:
             # Find next ride
@@ -215,6 +217,21 @@ class OptimizerModel:
                             travel_time = self.map.get_time(current_location, j)
                             total_cost += self.map.get_cost(current_location, j)
                             report_text += f"Empty move from {current_location} to {j} at time {current_time} (duration: {travel_time}, cost: {self.map.get_cost(current_location, j)})\n"
+                            data_frame = pd.concat([data_frame, pd.DataFrame({
+                                'movement_type': ['empty_move'],
+                                'hexagon_origin': [current_location],
+                                'lat_origin': [self.map.get_lat(current_location)],
+                                'lng_origin': [self.map.get_lng(current_location)],
+                                'hexagon_destination': [j],
+                                'lat_destination': [self.map.get_lat(j)],
+                                'lng_destination': [self.map.get_lng(j)],
+                                'start_at': [current_time],
+                                'end_at': [current_time + travel_time],
+                                'duration': [travel_time],
+                                'revenue': [0],
+                                'cost': [self.map.get_cost(current_location, j)]
+                            })], ignore_index=True)
+
                             current_time += travel_time
                             current_location = j
                             break   
@@ -225,6 +242,21 @@ class OptimizerModel:
                 travel_time = self.map.get_time(current_location, next_ride.origin)
                 total_cost += self.map.get_cost(current_location, next_ride.origin)
                 report_text += f"Empty move from {current_location} to {next_ride.origin} at time {current_time} (duration: {travel_time}, cost: {self.map.get_cost(current_location, next_ride.origin)})\n"
+                data_frame = pd.concat([data_frame, pd.DataFrame({
+                    'movement_type': ['empty_move'],
+                    'hexagon_origin': [current_location],
+                    'lat_origin': [self.map.get_lat(current_location)],
+                    'lng_origin': [self.map.get_lng(current_location)],
+                    'hexagon_destination': [next_ride.origin],
+                    'lat_destination': [self.map.get_lat(next_ride.origin)],
+                    'lng_destination': [self.map.get_lng(next_ride.origin)],
+                    'start_at': [current_time],
+                    'end_at': [current_time + travel_time],
+                    'duration': [travel_time],
+                    'revenue': [0],
+                    'cost': [self.map.get_cost(current_location, next_ride.origin)]
+                })], ignore_index=True)
+                
                 current_time = current_time + travel_time
                 current_location = next_ride.origin
             
@@ -233,8 +265,37 @@ class OptimizerModel:
             wait_time = round(ride_start - current_time, 2)
             if wait_time > 0:
                 report_text += f"Wait at location {current_location} for {wait_time} time units\n"
+                data_frame = pd.concat([data_frame, pd.DataFrame({
+                    'movement_type': ['wait'],
+                    'hexagon_origin': [current_location],
+                    'lat_origin': [self.map.get_lat(current_location)],
+                    'lng_origin': [self.map.get_lng(current_location)],
+                    'hexagon_destination': [current_location],
+                    'lat_destination': [self.map.get_lat(current_location)],
+                    'lng_destination': [self.map.get_lng(current_location)],
+                    'start_at': [current_time],
+                    'end_at': [current_time + wait_time],
+                    'duration': [wait_time],
+                    'revenue': [0],
+                    'cost': [0]
+                })], ignore_index=True)
             
             report_text += f'Ride from {next_ride.origin} to {next_ride.destination} starts at {ride_start:.2f}, ends at {ride_start + next_ride.duration:.2f} (revenue: {next_ride.price})\n'
+            data_frame = pd.concat([data_frame, pd.DataFrame({
+                'movement_type': ['ride'],
+                'hexagon_origin': [next_ride.origin],
+                'lat_origin': [self.map.get_lat(next_ride.origin)],
+                'lng_origin': [self.map.get_lng(next_ride.origin)],
+                'hexagon_destination': [next_ride.destination],
+                'lat_destination': [self.map.get_lat(next_ride.destination)],
+                'lng_destination': [self.map.get_lng(next_ride.destination)],
+                'start_at': [ride_start],
+                'end_at': [ride_start + next_ride.duration],
+                'duration': [next_ride.duration],
+                'revenue': [next_ride.price],
+                'cost': [self.map.get_cost(next_ride.origin, next_ride.destination)]
+            })], ignore_index=True)
+                        
             total_revenue += next_ride.price
             total_cost += self.map.get_cost(current_location, next_ride.origin)
             
@@ -249,6 +310,7 @@ class OptimizerModel:
         
         with open('outputs/report.txt', 'w') as f:
             f.write(report_text)
+        data_frame.to_csv('outputs/data_frame.csv', index=False)
         return total_revenue - total_cost
 
 def main():
