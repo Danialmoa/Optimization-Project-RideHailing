@@ -38,7 +38,7 @@ class RideData:
     
 if __name__ == "__main__":
     ride_data = RideData()
-    rides = [ride_data.generate_rides for _ in range(1500)]
+    rides = [ride_data.generate_rides for _ in range(100)]
     df = pd.DataFrame(
         [ride.to_dict() for ride in rides],
         columns=['origin', 'destination', 'available_at', 'end_at', 'price', 'duration']

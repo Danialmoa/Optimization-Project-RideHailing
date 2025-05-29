@@ -31,7 +31,7 @@ class OptimizerModel:
             vtype=gp.GRB.BINARY,
             name="move_without_ride"
         ) # all possible moves after a ride
-        
+
         # Time when ride r starts
         self.ride_start_time = self.model.addVars(
             self.rides,
@@ -107,34 +107,32 @@ class OptimizerModel:
                 self.drivers.end_time + M * (1 - gp.quicksum(self.ride_sequence[s, r] for s in self.rides + ['start'] if s != r))
             )
         
-        # 9. Ensure proper sequencing from empty moves
-        # for r in self.rides + ['start']:
-        #     for i in self.map.districts:
-        #         for j in self.map.get_neighbors(i):
-        #             # Only create constraint if this variable exists
-        #             if (r, i, j) in self.move_without_ride:
-        #                 valid_next_rides = [next_r for next_r in self.rides if next_r.origin == j and r != next_r]
-        #                 if valid_next_rides:
-        #                     self.model.addConstr(
-        #                         self.move_without_ride[r, i, j] <= 
-        #                         gp.quicksum(self.ride_sequence[r, next_r] for next_r in valid_next_rides)
-        #                     )
 
 
     def optimize(self):
         self._add_variables()
         self._add_constraints()
         
-        self.model.setObjective(
-            gp.quicksum(
-                self.ride_sequence[s, r] * (r.price - self.map.get_cost(r.origin, r.destination)) for s in self.rides + ['start'] for r in self.rides if s != r
-            ),
-            gp.GRB.MAXIMIZE
+        # Revenue
+        ride_profit = gp.quicksum(
+            self.ride_sequence[s, r] * (r.price - self.map.get_cost(r.origin, r.destination)) 
+            for s in self.rides + ['start'] for r in self.rides if s != r
         )
+
+        # Empty move cost
+        empty_move_cost = gp.quicksum(
+            self.move_without_ride[r, i, j] * self.map.get_cost(i, j)
+            for r in self.rides + ['start'] 
+            for i in self.map.districts 
+            for j in self.map.get_neighbors(i) 
+            if i != j and (r, i, j) in self.move_without_ride
+        )
+
+        self.model.setObjective(ride_profit - empty_move_cost, gp.GRB.MAXIMIZE)
         
         self.model.setParam('LogToConsole', 1) # show log in console
         self.model.setParam('DisplayInterval', 10) # update every 10 seconds
-        self.model.setParam('MIPGap', 0.005) # 0.5% gap
+        self.model.setParam('MIPGap', 0.1) 
         
         self.model.update()
         self.model.optimize()

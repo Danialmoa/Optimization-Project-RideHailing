@@ -17,7 +17,9 @@ class Map:
     def _find_neighbors(self):
         neighbors = {}
         for i in range(len(self.districts)):
-            neighbors[self.districts[i]] = list(h3.grid_ring(self.districts[i], 2))
+            neighbor_list = list(h3.grid_ring(self.districts[i], 2))
+            neighbors[self.districts[i]] = [hexagon for hexagon in neighbor_list if hexagon in self.districts]
+            
         return neighbors
     
     def get_distance(self, origin, destination):
