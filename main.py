@@ -22,7 +22,8 @@ class OptimizerModel:
             vtype=gp.GRB.BINARY,
             name="ride_sequence"
         ) # First index is the previous ride, second index is the current ride
-
+        print(f"Number of ride_sequence variables: {len(self.ride_sequence)}")
+        
         # Binary variable: 1 if driver moves empty from district i to j after ride r
         # Only 2-ring neighbors are considered -> For guorabi limitation
         self.move_without_ride = self.model.addVars(
@@ -31,7 +32,8 @@ class OptimizerModel:
             vtype=gp.GRB.BINARY,
             name="move_without_ride"
         ) # all possible moves after a ride
-
+        print(f"Number of move_without_ride variables: {len(self.move_without_ride)}")
+        
         # Time when ride r starts
         self.ride_start_time = self.model.addVars(
             self.rides,
