@@ -3,6 +3,7 @@
 ## Project Overview
 This project models the problem of a ride-hailing driver choosing rides to maximize revenue using Integer Linear Programming (ILP). The goal is to determine the optimal sequence of rides a driver should accept within their working time constraints to maximize total revenue.
 
+
 ## Problem Description
 - Each ride is characterized by:
   - Start and end locations
@@ -39,4 +40,35 @@ This model provides:
 ## Implementation Details
 - Programming language: Python
 - Solver: Gurobi
-- Data structures: Graph representation of city network
+
+
+## Project Structure
+├── data/ # All simulation code for generating Ride & Map data
+├── models/ # Ride & Map and Driver module implementations
+├── main.py # Main optimization script
+└── outputs/ # Results and output files
+
+
+## Installation & Setup
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Ensure Gurobi is properly installed and licensed
+
+## Usage
+Run the main optimization:
+```bash
+python main.py
+```
+
+## Results & Visualizations
+The project includes comprehensive analysis and visualizations:
+- Route visualization on Rome city map
+- Revenue optimization comparisons
+
+**Note:** Presentation slides and detailed visualizations are available in the project repository.
+
+
+**Course Context:** This project is part of the Optimization course at Siena University.
