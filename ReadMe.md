@@ -62,13 +62,11 @@ The project includes comprehensive analysis and visualizations:
 2. Add negative-cost deadhead moves
 3. Add ride availability time windows
 4. Include realistic constraints (breaks, start node)
-5. Test on real city data
 
 ## Expected Outcomes
 This model provides:
 - A computational framework for optimal ride selection
 - Insights into revenue maximization strategies
-- Scalability from small test graphs to real-world city networks
 - A foundation for potential extensions
 
 ## Implementation Details
@@ -84,11 +82,9 @@ All dependencies are managed through `setup.py`. The main requirements include:
 - Matplotlib/Plotly (for visualizations)
 - Jupyter (for notebooks)
 
-## Author
-[Your Name] - Optimization Course, Siena University
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-*This project was developed as part of the Optimization course curriculum at Siena University.*
+Optimization Course, Siena University
