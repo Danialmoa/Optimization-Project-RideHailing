@@ -54,7 +54,7 @@ This model provides:
 1. Clone the repository
 2. Install dependencies:
    ```bash
-   pip install -r requirements.txt
+   pip install -e .
    ```
 3. Ensure Gurobi is properly installed and licensed
 
