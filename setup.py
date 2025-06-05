@@ -10,7 +10,8 @@ setup(
         "pandas",
         "matplotlib",
         "gurobipy",
-        "jupyter"
+        "jupyter",
+        "h3"
     ],
     author="Danial Moafi",
     description="Ride-Hailing Revenue Optimization via Integer Linear Programming",
