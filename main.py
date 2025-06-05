@@ -24,14 +24,23 @@ class OptimizerModel:
         ) # First index is the previous ride, second index is the current ride
         print(f"Number of ride_sequence variables: {len(self.ride_sequence)}")
         
-        # Binary variable: 1 if driver moves empty from district i to j after ride r
-        # Only 2-ring neighbors are considered -> For guorabi limitation
+        feasible_moves = []
+        
+        for r in self.rides + ['start']:
+            if r == 'start':
+                driver_location = self.drivers.start_location
+            else:
+                driver_location = r.destination
+            
+            for neighbor in self.map.get_neighbors(driver_location):
+                if neighbor != driver_location:
+                    feasible_moves.append((r, driver_location, neighbor))
+        
         self.move_without_ride = self.model.addVars(
-            [(r, i, j) for r in self.rides + ['start'] 
-             for i in self.map.districts for j in self.map.get_neighbors(i) if i != j],
+            feasible_moves,
             vtype=gp.GRB.BINARY,
             name="move_without_ride"
-        ) # all possible moves after a ride
+        )
         print(f"Number of move_without_ride variables: {len(self.move_without_ride)}")
         
         # Time when ride r starts
@@ -53,12 +62,15 @@ class OptimizerModel:
         # 1. Flow conservation - if a driver arrives somewhere, they must leave
         for s in self.rides:
             # If ride s is taken, driver must either take another ride or move empty
-            # Only 2-ring neighbors are considered
             outgoing_rides = gp.quicksum(self.ride_sequence[s, r] for r in self.rides if r != s)
+            
+            # FIXED: Only sum over moves that actually exist
             valid_empty_moves = gp.quicksum(
                 self.move_without_ride[s, s.destination, j] 
-                for j in self.map.get_neighbors(s.destination) if j != s.destination
+                for j in self.map.get_neighbors(s.destination) 
+                if j != s.destination and (s, s.destination, j) in self.move_without_ride
             )
+            
             taken = gp.quicksum(self.ride_sequence[prev, s] for prev in self.rides + ['start'] if prev != s)
             self.model.addConstr(outgoing_rides + valid_empty_moves == taken)
         
@@ -68,7 +80,8 @@ class OptimizerModel:
         )
         valid_start_moves = gp.quicksum(
             self.move_without_ride['start', self.drivers.start_location, j] 
-            for j in self.map.get_neighbors(self.drivers.start_location) if j != self.drivers.start_location
+            for j in self.map.get_neighbors(self.drivers.start_location) 
+            if j != self.drivers.start_location and ('start', self.drivers.start_location, j) in self.move_without_ride
         )
         self.model.addConstr(start_rides + valid_start_moves == 1)
         
@@ -124,17 +137,19 @@ class OptimizerModel:
         # Empty move cost
         empty_move_cost = gp.quicksum(
             self.move_without_ride[r, i, j] * self.map.get_cost(i, j)
-            for r in self.rides + ['start'] 
-            for i in self.map.districts 
-            for j in self.map.get_neighbors(i) 
-            if i != j and (r, i, j) in self.move_without_ride
+            for (r, i, j) in self.move_without_ride.keys()
         )
 
         self.model.setObjective(ride_profit - empty_move_cost, gp.GRB.MAXIMIZE)
         
+        
+        self.model.setParam('NodefileStart', 0.1)
+        self.model.setParam('NodefileDir', '/tmp')
+        
         self.model.setParam('LogToConsole', 1) # show log in console
         self.model.setParam('DisplayInterval', 10) # update every 10 seconds
-        self.model.setParam('MIPGap', 0.1) 
+        self.model.setParam('MIPGap', 0.025) 
+        self.model.setParam('TimeLimit', 3600)
         
         self.model.update()
         self.model.optimize()
@@ -174,53 +189,66 @@ class OptimizerModel:
             if next_ride is None:
                 # No more rides, check for empty movement to end location
                 for j in self.map.get_neighbors(current_location):
-                    if j == self.drivers.end_location:
-                        if self.move_without_ride[current, current_location, j].x > 0.5:
-                            travel_time = self.map.get_time(current_location, j)
-                            total_cost += self.map.get_cost(current_location, j)
-                            report_text += f"Empty move from {current_location} to {j} at time {current_time} (duration: {travel_time}, cost: {self.map.get_cost(current_location, j)})\n"
-                            data_frame = pd.concat([data_frame, pd.DataFrame({
-                                'movement_type': ['empty_move'],
-                                'hexagon_origin': [current_location],
-                                'lat_origin': [self.map.get_lat(current_location)],
-                                'lng_origin': [self.map.get_lng(current_location)],
-                                'hexagon_destination': [j],
-                                'lat_destination': [self.map.get_lat(j)],
-                                'lng_destination': [self.map.get_lng(j)],
-                                'start_at': [current_time],
-                                'end_at': [current_time + travel_time],
-                                'duration': [travel_time],
-                                'revenue': [0],
-                                'cost': [self.map.get_cost(current_location, j)]
-                            })], ignore_index=True)
+                    if (j == self.drivers.end_location and 
+                        (current, current_location, j) in self.move_without_ride and
+                        self.move_without_ride[current, current_location, j].x > 0.5):
+                        travel_time = self.map.get_time(current_location, j)
+                        total_cost += self.map.get_cost(current_location, j)
+                        report_text += f"Empty move from {current_location} to {j} at time {current_time} (duration: {travel_time}, cost: {self.map.get_cost(current_location, j)})\n"
+                        data_frame = pd.concat([data_frame, pd.DataFrame({
+                            'movement_type': ['empty_move'],
+                            'hexagon_origin': [current_location],
+                            'lat_origin': [self.map.get_lat(current_location)],
+                            'lng_origin': [self.map.get_lng(current_location)],
+                            'hexagon_destination': [j],
+                            'lat_destination': [self.map.get_lat(j)],
+                            'lng_destination': [self.map.get_lng(j)],
+                            'start_at': [current_time],
+                            'end_at': [current_time + travel_time],
+                            'duration': [travel_time],
+                            'revenue': [0],
+                            'cost': [self.map.get_cost(current_location, j)]
+                        })], ignore_index=True)
 
-                            current_time += travel_time
-                            current_location = j
-                            break   
+                        current_time += travel_time
+                        current_location = j
+                        break   
                 break
             
             # If origin is different from current location, need empty movement
             if next_ride.origin != current_location:
-                travel_time = self.map.get_time(current_location, next_ride.origin)
-                total_cost += self.map.get_cost(current_location, next_ride.origin)
-                report_text += f"Empty move from {current_location} to {next_ride.origin} at time {current_time} (duration: {travel_time}, cost: {self.map.get_cost(current_location, next_ride.origin)})\n"
-                data_frame = pd.concat([data_frame, pd.DataFrame({
-                    'movement_type': ['empty_move'],
-                    'hexagon_origin': [current_location],
-                    'lat_origin': [self.map.get_lat(current_location)],
-                    'lng_origin': [self.map.get_lng(current_location)],
-                    'hexagon_destination': [next_ride.origin],
-                    'lat_destination': [self.map.get_lat(next_ride.origin)],
-                    'lng_destination': [self.map.get_lng(next_ride.origin)],
-                    'start_at': [current_time],
-                    'end_at': [current_time + travel_time],
-                    'duration': [travel_time],
-                    'revenue': [0],
-                    'cost': [self.map.get_cost(current_location, next_ride.origin)]
-                })], ignore_index=True)
+                # Check if this move was actually planned in the optimization
+                move_found = False
+                for (r, i, j) in self.move_without_ride.keys():
+                    if (r == current and i == current_location and j == next_ride.origin and 
+                        self.move_without_ride[r, i, j].x > 0.5):
+                        travel_time = self.map.get_time(current_location, next_ride.origin)
+                        total_cost += self.map.get_cost(current_location, next_ride.origin)
+                        report_text += f"Empty move from {current_location} to {next_ride.origin} at time {current_time} (duration: {travel_time}, cost: {self.map.get_cost(current_location, next_ride.origin)})\n"
+                        data_frame = pd.concat([data_frame, pd.DataFrame({
+                            'movement_type': ['empty_move'],
+                            'hexagon_origin': [current_location],
+                            'lat_origin': [self.map.get_lat(current_location)],
+                            'lng_origin': [self.map.get_lng(current_location)],
+                            'hexagon_destination': [next_ride.origin],
+                            'lat_destination': [self.map.get_lat(next_ride.origin)],
+                            'lng_destination': [self.map.get_lng(next_ride.origin)],
+                            'start_at': [current_time],
+                            'end_at': [current_time + travel_time],
+                            'duration': [travel_time],
+                            'revenue': [0],
+                            'cost': [self.map.get_cost(current_location, next_ride.origin)]
+                        })], ignore_index=True)
+                        
+                        current_time = current_time + travel_time
+                        current_location = next_ride.origin
+                        move_found = True
+                        break
                 
-                current_time = current_time + travel_time
-                current_location = next_ride.origin
+                if not move_found:
+                    # This shouldn't happen if the optimization is correct, but let's handle it
+                    print(f"Warning: No direct move found from {current_location} to {next_ride.origin}")
+                    # You might need to find a path through multiple moves
             
             # Take the ride
             ride_start = self.ride_start_time[next_ride].x
@@ -287,6 +315,36 @@ def main():
     optimizer.optimize()
     optimizer.get_results()
     
+    
+def greedy_solution():
+    # select highest price in each time (without moving empty)
+    rides = pd.read_csv('data/databases/rides.csv')
+    driver = Driver(start_time=8 * 60, end_time=22 * 60, start_location='871e80420ffffff', end_location='871e80420ffffff')
+    map = Map()
+    
+    s_time = driver.start_time
+    current_location = driver.start_location
+    selected_rides = []
+    while s_time < driver.end_time:
+        available_rides = rides[rides['origin'] == current_location]
+        available_rides = available_rides[available_rides['available_at'] <= s_time]
+        available_rides = available_rides[available_rides['end_at'] >= s_time]
+        available_rides = available_rides[available_rides['price'] > 0]
+        if len(available_rides) > 0:
+            best_ride = available_rides.sort_values(by='price', ascending=False).iloc[0]
+            print(best_ride)
+            s_time += best_ride['duration']
+            current_location = best_ride['destination']
+            selected_rides.append(best_ride)
+            print(f"Ride from {best_ride['origin']} to {best_ride['destination']} starts at {s_time}, ends at {s_time + best_ride['duration']} (revenue: {best_ride['price']}, cost: {map.get_cost(best_ride['origin'], best_ride['destination'])})")
+        else:
+            s_time += 1
+    print(pd.DataFrame(selected_rides))
+    print(f"Total revenue: {sum([ride['price'] for ride in selected_rides])}")
+    print(f"Total cost: {sum([map.get_cost(ride['origin'], ride['destination']) for ride in selected_rides])}")
+    print(f"Net profit: {sum([ride['price'] for ride in selected_rides]) - sum([map.get_cost(ride['origin'], ride['destination']) for ride in selected_rides])}")
+    
 if __name__ == "__main__":
     main()
+    #greedy_solution()
     
