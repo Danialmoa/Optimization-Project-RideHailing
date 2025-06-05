@@ -43,11 +43,12 @@ This model provides:
 
 
 ## Project Structure
+```
 ├── data/ # All simulation code for generating Ride & Map data
 ├── models/ # Ride & Map and Driver module implementations
 ├── main.py # Main optimization script
 └── outputs/ # Results and output files
-
+```
 
 ## Installation & Setup
 1. Clone the repository
