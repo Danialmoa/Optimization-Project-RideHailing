@@ -1,5 +1,7 @@
 # Ride-Hailing Revenue Optimization via Integer Linear Programming
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Danialmoa/Optimization-Project-RideHailing/blob/main/notebooks/colab_run.ipynb)
+
 ## Project Overview
 This project models the problem of a ride-hailing driver choosing rides to maximize revenue using Integer Linear Programming (ILP). The goal is to determine the optimal sequence of rides a driver should accept within their working time constraints to maximize total revenue.
 
