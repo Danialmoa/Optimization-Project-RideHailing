@@ -148,7 +148,7 @@ class OptimizerModel:
         
         self.model.setParam('LogToConsole', 1) # show log in console
         self.model.setParam('DisplayInterval', 10) # update every 10 seconds
-        self.model.setParam('MIPGap', 0.025) 
+        self.model.setParam('MIPGap', 0.02) 
         self.model.setParam('TimeLimit', 3600)
         
         self.model.update()
@@ -245,10 +245,6 @@ class OptimizerModel:
                         move_found = True
                         break
                 
-                if not move_found:
-                    # This shouldn't happen if the optimization is correct, but let's handle it
-                    print(f"Warning: No direct move found from {current_location} to {next_ride.origin}")
-                    # You might need to find a path through multiple moves
             
             # Take the ride
             ride_start = self.ride_start_time[next_ride].x
@@ -301,7 +297,7 @@ class OptimizerModel:
         with open('outputs/report.txt', 'w') as f:
             f.write(report_text)
         data_frame.to_csv('outputs/data_frame.csv', index=False)
-        return total_revenue - total_cost
+        return data_frame
 
 def main():
     rides = pd.read_csv('data/databases/rides.csv')
@@ -345,6 +341,6 @@ def greedy_solution():
     print(f"Net profit: {sum([ride['price'] for ride in selected_rides]) - sum([map.get_cost(ride['origin'], ride['destination']) for ride in selected_rides])}")
     
 if __name__ == "__main__":
-    main()
-    #greedy_solution()
+    #main()
+    greedy_solution()
     
