@@ -1,18 +1,17 @@
 
 === DRIVER ITINERARY ===
 Start at location 871e80420ffffff at time 480
-Empty move from 871e80420ffffff to 871e80523ffffff at time 480 (duration: 19.29842210440473, cost: 13.50889547308331)
-Ride from 871e80523ffffff to 871e80422ffffff starts at 499.30, ends at 566.65 (revenue: 29.415006157513105)
-Empty move from 871e80422ffffff to 871e80518ffffff at time 566.6484737965468 (duration: 8.556795471142177, cost: 5.989756829799523)
-Ride from 871e80518ffffff to 871e805a0ffffff starts at 575.21, ends at 628.37 (revenue: 23.446400590377227)
-Empty move from 871e805a0ffffff to 871e80572ffffff at time 628.367112415313 (duration: 29.220258452731738, cost: 20.454180916912215)
-Wait at location 871e80572ffffff for 232.41 time units
-Ride from 871e80572ffffff to 871e86259ffffff starts at 890.00, ends at 975.20 (revenue: 52.429194658951545)
-Empty move from 871e86259ffffff to 871e8625cffffff at time 975.1979270491852 (duration: 5.629325879870247, cost: 3.9405281159091725)
-Wait at location 871e8625cffffff for 25.17 time units
-Ride from 871e8625cffffff to 871e8051dffffff starts at 1006.00, ends at 1075.61 (revenue: 32.288129630547914)
+Empty move from 871e80420ffffff to 871e80405ffffff at time 480 (duration: 6.4385015121830245, cost: 4.5069510585281165)
+Wait at location 871e80405ffffff for 496.56 time units
+Ride from 871e80405ffffff to 871e80529ffffff starts at 983.00, ends at 1056.09 (revenue: 30.575453877937097)
+Wait at location 871e80529ffffff for 40.91 time units
+Ride from 871e80529ffffff to 871e8042effffff starts at 1097.00, ends at 1167.73 (revenue: 30.32810208534653)
+Ride from 871e8042effffff to 871e8050affffff starts at 1167.73, ends at 1196.51 (revenue: 16.882481029002598)
+Ride from 871e8050affffff to 871e80523ffffff starts at 1196.51, ends at 1238.14 (revenue: 23.218623079016545)
+Wait at location 871e80523ffffff for 23.42 time units
+Ride from 871e80523ffffff to 871e80554ffffff starts at 1261.55, ends at 1310.05 (revenue: 23.193450676565345)
 
 === SUMMARY ===
-Total revenue: 137.5787310373898
-Total empty movement cost: 43.89336133570422
-Net profit: 93.68536970168557
+Total revenue: 124.19811074786811
+Total empty movement cost: 4.5069510585281165
+Net profit: 119.69115968934
