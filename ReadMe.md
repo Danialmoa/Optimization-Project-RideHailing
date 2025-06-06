@@ -1,5 +1,7 @@
 # Ride-Hailing Revenue Optimization using Integer Linear Programming (ILP)
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Danialmoa/Optimization-Project-RideHailing/blob/main/notebooks/colab_run.ipynb)
+
 ## Overview
 
 This project uses Integer Linear Programming (ILP) to help a ride-hailing driver in Rome select the most profitable sequence of rides within a workday. Given a set of ride requests, driver constraints (time/location), and map-based distances, the system finds the optimal ride plan that maximizes net profit (revenue - cost of empty travel).
@@ -237,6 +239,9 @@ python main.py
 **model.lp:** The full Gurobi optimization model written in LP format.
  - It includes all decision variables, constraints, and the objective function.
  - Use this to inspect the model structure, debug constraint logic, or load the model into Gurobi’s GUI.
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Team
 - Danial Moafi
