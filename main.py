@@ -59,22 +59,42 @@ class OptimizerModel:
         # Define a large constant for big-M constraints
         M = 10000
         
-        # 1. Flow conservation - if a driver arrives somewhere, they must leave
+        # 1. Spatial constraint: Can only take rides from current location
+        # For rides taken immediately after start
+        for r in self.rides:
+            if r.origin != self.drivers.start_location:
+                # If we take ride r after start, we must have moved empty to r.origin first
+                empty_move_to_origin = gp.quicksum(
+                    self.move_without_ride['start', self.drivers.start_location, r.origin]
+                    for key in self.move_without_ride.keys()
+                    if key == ('start', self.drivers.start_location, r.origin)
+                )
+                self.model.addConstr(self.ride_sequence['start', r] <= empty_move_to_origin)
+        
+        # For rides taken after other rides  
         for s in self.rides:
-            # If ride s is taken, driver must either take another ride or move empty
+            for r in self.rides:
+                if s != r and s.destination != r.origin:
+                    # If we take ride r after ride s, we must have moved empty from s.destination to r.origin
+                    empty_move_to_origin = gp.quicksum(
+                        self.move_without_ride[s, s.destination, r.origin]
+                        for key in self.move_without_ride.keys() 
+                        if key == (s, s.destination, r.origin)
+                    )
+                    self.model.addConstr(self.ride_sequence[s, r] <= empty_move_to_origin)
+        
+        # 2. Flow conservation - if driver arrives somewhere, they must leave
+        for s in self.rides:
             outgoing_rides = gp.quicksum(self.ride_sequence[s, r] for r in self.rides if r != s)
-            
-            # FIXED: Only sum over moves that actually exist
             valid_empty_moves = gp.quicksum(
                 self.move_without_ride[s, s.destination, j] 
                 for j in self.map.get_neighbors(s.destination) 
                 if j != s.destination and (s, s.destination, j) in self.move_without_ride
             )
-            
             taken = gp.quicksum(self.ride_sequence[prev, s] for prev in self.rides + ['start'] if prev != s)
             self.model.addConstr(outgoing_rides + valid_empty_moves == taken)
         
-        # 2. Driver starts at their start location
+        # 3. Driver starts at their start location  
         start_rides = gp.quicksum(
             self.ride_sequence['start', r] for r in self.rides if r.origin == self.drivers.start_location
         )
@@ -85,35 +105,42 @@ class OptimizerModel:
         )
         self.model.addConstr(start_rides + valid_start_moves == 1)
         
-        # 3. Time window constraints for rides
+        # 4. Each empty move can only be used once
+        for (r, i, j) in self.move_without_ride.keys():
+            # An empty move can only happen if we're at location i after ride r
+            if r == 'start':
+                available = 1 if i == self.drivers.start_location else 0
+            else:
+                available = 1 if i == r.destination else 0
+                available *= gp.quicksum(self.ride_sequence[prev, r] for prev in self.rides + ['start'] if prev != r)
+            
+            self.model.addConstr(self.move_without_ride[r, i, j] <= available)
+        
+        # 5. Time window constraints for rides
         for r in self.rides:
-            # Only enforce time windows for taken rides
             taken = gp.quicksum(self.ride_sequence[s, r] for s in self.rides + ['start'] if s != r)
             self.model.addConstr(self.ride_start_time[r] >= r.available_at - M * (1 - taken))
             self.model.addConstr(self.ride_start_time[r] <= r.end_at + M * (1 - taken))
         
-        # 4. Time continuity constraints
-        # If ride s is followed by ride r, ensure enough time between them
+        # 6. Time continuity constraints
         for s in self.rides:
             for r in self.rides:
                 if s != r:
-                    # Time to go from s.destination to r.origin + waiting time
                     travel_time = self.map.get_time(s.destination, r.origin)
                     self.model.addConstr(
                         self.ride_start_time[r] >= 
                         self.ride_start_time[s] + s.duration + travel_time - M * (1 - self.ride_sequence[s, r])
                     )
         
-        # 5. Start time constraint for the first ride
+        # 7. Start time constraint for the first ride
         for r in self.rides:
-            # If r is the first ride
             travel_time = self.map.get_time(self.drivers.start_location, r.origin)
             self.model.addConstr(
                 self.ride_start_time[r] >= 
                 self.drivers.start_time + travel_time - M * (1 - self.ride_sequence['start', r])
-            )   
+            )
         
-        # 6. End time constraint
+        # 8. End time constraint
         for r in self.rides:
             # Ensure driver can return to end location on time
             travel_time = self.map.get_time(r.destination, self.drivers.end_location)
@@ -148,7 +175,7 @@ class OptimizerModel:
         
         self.model.setParam('LogToConsole', 1) # show log in console
         self.model.setParam('DisplayInterval', 10) # update every 10 seconds
-        self.model.setParam('MIPGap', 0.02) 
+        self.model.setParam('MIPGap', 0.01) 
         self.model.setParam('TimeLimit', 3600)
         
         self.model.update()
