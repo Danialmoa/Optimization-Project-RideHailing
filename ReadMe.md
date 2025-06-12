@@ -188,14 +188,11 @@ $$
 3. **Sequential Compatibility:**  
    The origin of ride `j` must be reachable from the destination of ride `i` within the time window.
 
-4. **Binary Decision Variable:**
-   Let  
-   $$
-   x_i \in \{0, 1\}
-   $$  
-   where:  
-   - \( x_i = 1 \) if ride \( i \) is selected  
-   - \( x_i = 0 \) otherwise
+4. **Binary Decision Variable:** 
+   Let `x_i ∈ {0, 1}`, where:
+
+   - `x_i = 1` if ride *i* is selected  
+   - `x_i = 0` otherwise
 
 ### Optimizer:
 Will use **Integer Linear Programming** (ILP), potentially using solvers like:
