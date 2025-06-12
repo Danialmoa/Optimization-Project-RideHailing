@@ -195,7 +195,7 @@ $$
 x_i \in \{0, 1\}
 $$  
 where:  
-- \( x_i = 1 \) if ride *i* is selected  
+- \( x_i = 1 \) if ride \( i \) is selected  
 - \( x_i = 0 \) otherwise
 
 ### Optimizer:
