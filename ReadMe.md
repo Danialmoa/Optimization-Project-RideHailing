@@ -173,9 +173,10 @@ class Map:
 
 ### Goal:
 Maximize total revenue:
-\[
+
+$$
 \text{Maximize} \sum_{i=1}^{N} x_i \cdot \text{price}_i
-\]
+$$
 
 ### Constraints:
 1. **Time Constraint:**  
